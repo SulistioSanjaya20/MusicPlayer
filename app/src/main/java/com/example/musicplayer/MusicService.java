@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MusicService extends Service implements
         MediaPlayer.OnPreparedListener,
@@ -26,6 +27,9 @@ public class MusicService extends Service implements
 
     private final IBinder musicBind = new MusicBinder();
 
+    private boolean shuffle=false;
+    private Random rand;
+
     public void onCreate(){
         //create the service
         super.onCreate();
@@ -34,6 +38,7 @@ public class MusicService extends Service implements
         //create player
         player = new MediaPlayer();
         initMusicPlayer();
+        rand=new Random();
     }
 
     public void initMusicPlayer(){
@@ -70,11 +75,15 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-
+        if(player.getCurrentPosition()>0){
+            mp.reset();
+            playNext();
+        }
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        mp.reset();
         return false;
     }
 
@@ -106,4 +115,52 @@ public class MusicService extends Service implements
         }
         player.prepareAsync();
     }
+    public int getPosn(){
+        return player.getCurrentPosition();
+    }
+
+    public int getDur(){
+        return player.getDuration();
+    }
+
+    public boolean isPng(){
+        return player.isPlaying();
+    }
+
+    public void pausePlayer(){
+        player.pause();
+    }
+
+    public void seek(int posn){
+        player.seekTo(posn);
+    }
+
+    public void go(){
+        player.start();
+    }
+
+    public void playPrev(){
+        songPos--;
+        if(songPos<0) songPos=songs.size()-1;
+        playSong();
+    }
+    public void playNext(){
+        if(shuffle){
+            int newSong = songPos;
+            while(newSong==songPos){
+                newSong=rand.nextInt(songs.size());
+            }
+            songPos=newSong;
+        }
+        else{
+            songPos++;
+            if(songPos>=songs.size()) songPos=0;
+        }
+        playSong();
+    }
+    public void setShuffle(){
+        if(shuffle) shuffle=false;
+        else shuffle=true;
+    }
+
 }
